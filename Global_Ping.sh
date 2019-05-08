@@ -8,8 +8,8 @@ lookup_host() {
 	local ip=$(host -4 $domain|grep -v mail|grep "has address"|awk {'print $4'}|grep "[0-9]")
 
 	if [ "$ip" ]; then
-		tld=$(echo $domain|tr "." " "|awk {'print "."$2'})
-		country_name=$(grep $tld ${file_name})
+		local tld=$(echo $domain|tr "." " "|awk {'print "."$2'})
+		local country_name=$(grep $tld ${file_name})
 		echo "$ip $country_name"|grep [a-z]|grep [0-9]
 	fi
 }
@@ -37,7 +37,7 @@ main() {
 	while read domain; do 
 		lookup_host $domain|while read line; do
 			local ip=$(echo $line|awk {'print $1'})		
-			latency=$(ping_host $ip|awk {'print $7'}|sed 's/time=//g')
+			local latency=$(ping_host $ip|awk {'print $7'}|sed 's/time=//g')
 			if [ "$latency" ]; then
 				echo "$latency ms to $line"
 			fi
