@@ -12,14 +12,14 @@ lookup_host() {
 	local ip=$(host -4 $domain|
 		grep -v mail|
 		grep "has address"|
-		awk {'print $4'}|
+		awk '{print $4}'|
 		grep "[0-9]")
 
 	# if we have an ip, and a country, then return it
 	if [ "$ip" ]; then
-		local tld=$(echo $domain|tr "." " "|awk {'print "."$2'})
-		local country_name=$(grep $tld ${file_name})
-		echo "$ip $country_name"|grep [a-z]|grep [0-9]
+		local tld=$(echo "$domain"|tr "." " "|awk '{print "."$2}')
+		local country_name=$(grep "$tld" ${file_name})
+		echo "$ip $country_name"|grep "[a-z]|grep [0-9]"
 	fi
 }
 
@@ -28,18 +28,18 @@ ping_host() {
 # given a domain as an agument, send an icmp echo request packet
 	local domain=$1
 	# send a single packet with a short timeout
-	ping -t2 -c1 $domain|grep "64 bytes"
+	ping -t2 -c1 "$domain"|grep "64 bytes"
 }
 
 
 domain_permutation() {
 # iterate through all of the tlds and prepend"www, nic, and gov"
 	local file_name="tld.clean"
-	while read tld; do
-		echo $tld|tr -d "\."|awk {'print $1"."$1'}
-		echo $tld|awk {'print "www"$1'}
-		echo $tld|awk {'print "nic"$1'}
-		echo $tld|awk {'print "gov"$1'}
+	while read -r tld; do
+		echo "$tld"|tr -d "\."|awk '{print $1"."$1}'
+		echo "$tld"|awk '{print "www"$1}'
+		echo "$tld"|awk '{print "nic"$1}'
+		echo "$tld"|awk '{print "gov"$1}'
 	done < ${file_name}
 }
 
@@ -47,13 +47,13 @@ domain_permutation() {
 main() {
 	# randomly sort the domains
 	domain_permutation|sort -R|
-	while read domain; do 
+	while read -r domain; do 
 		# try to resolve domain
-		lookup_host $domain|while read line; do
+		lookup_host "$domain"|while read -r line; do
 			# check if an IP address is associated in the result
-			local ip=$(echo $line|awk {'print $1'})		
+			local ip=$(echo "$line"|awk '{print $1}')		
 			# check the latency of a ping
-			local latency=$(ping_host $ip|awk {'print $7'}|sed 's/time=//g')
+			local latency=$(ping_host "$ip"|awk '{print $7}'|sed 's/time=//g')
 			# if the packet came back, then paint the working result
 			if [ "$latency" ]; then
 				echo "$latency ms to $line"|grep -v "0.0.0.0"
